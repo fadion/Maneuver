@@ -94,6 +94,6 @@ To achieve synchronization, Maneuver will store a `.revision` file in your serve
 
 ## Authors
 
-**Fadion Dashi** is the author of Maneuver. He's a PHP, Laravel and Objective-C developer that lives in Tirana, Albania and runs his own company at (Streha shpk)[http://www.streha.al].
+**Fadion Dashi** is the author of Maneuver. He's a PHP, Laravel and Objective-C developer that lives in Tirana, Albania and runs his own company at [Streha shpk](http://www.streha.al).
 
-**Baki Goxhaj** is the author of PHPloy, on which Maneuver is based. He's a freelance PHP, Laravel and Wordpress developer that lives in Vlora, Albania. Find him at (WPLancer)[http://www.wplancer.com].
+**Baki Goxhaj** is the author of PHPloy, on which Maneuver is based. He's a freelance PHP, Laravel and Wordpress developer that lives in Vlora, Albania. Find him at [WPLancer](http://www.wplancer.com).
