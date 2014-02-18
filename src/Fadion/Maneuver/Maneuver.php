@@ -210,7 +210,7 @@ class Maneuver
                 // On list mode, just print the file.
                 if ($this->mode == self::MODE_LIST)
                 {
-                    print "× \033[0;37m{$file}\033[0m \033[0;31mwill be removed\033[0m";
+                    print "\n× \033[0;37m{$file}\033[0m \033[0;31mwill be removed\033[0m";
                     continue;
                 }
 
