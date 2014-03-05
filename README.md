@@ -6,6 +6,8 @@ It is dead-simple to use! Add your servers in the config and just run one comman
 
 Maneuver is very tightly coupled to [PHPloy](https://Github.com/banago/PHPloy), a CLI tool written in PHP that can deploy any project, not just Laravel apps.
 
+![maneuver](https://f.cloud.github.com/assets/374519/2333156/e0198082-a465-11e3-8fe6-f9f306597f8a.gif)
+
 ## Why?
 
 There are plenty of fantastic tools for deployment: Capistrano, Rocketeer or Envoy (Laravel's own ssh task runner), to name a few. They get the job done, probably in a more elegant way. So why use this approach?
