@@ -30,7 +30,7 @@ Maneuver solves these problems with a very simple approach. It takes the best of
 
 2. Add `Fadion\Maneuver\ManeuverServiceProvider` to your `app/config/app.php` file, inside the `providers` array.
 
-3. Publish the package's config, so you can easily modify it in: `app/config/packages/fadion/maneuver/config.php`
+3. Publish the package's config with `php artisan config:publish fadion/maneuver`, so you can easily modify it in: `app/config/packages/fadion/maneuver/config.php`
 
 ## Configuration
 
