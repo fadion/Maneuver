@@ -181,6 +181,9 @@ class Deploy
         // Remove ignored files from the list of uploads.
         $filesToUpload = array_diff($filesToUpload, $this->ignoredFiles);
 
+        // Integrated files tu upload with vendor and or composer files
+        $filesToUpload = $this->addVendorFiles($filesToUpload);
+
         $this->filesToUpload = $filesToUpload;
         $this->filesToDelete = $filesToDelete;
 
@@ -336,7 +339,7 @@ class Deploy
     /**
      * Writes latest revision to the remote
      * revision file
-     * 
+     *
      * @return void
      */
     public function writeRevision()
@@ -351,12 +354,38 @@ class Deploy
 
     /**
      * Closes FTP connection
-     * 
+     *
      * @return void
      */
     public function close()
     {
         ftp_close($this->connection);
+    }
+
+    /**
+     * Update list of file to upload with vendor and or composer files
+     *
+     * @return array
+     */
+    protected function addVendorFiles(array $source)
+    {
+        if (in_array('composer.json', $source))
+        {
+            foreach(\File::allFiles(base_path() . '/vendor') as $file)
+            {
+                $path = str_replace(base_path() .'/', '', $file->getPathname());
+                array_push($source, $path);
+            }
+        }
+        else {
+            array_push($source, 'vendor/autoload.php');
+            foreach(\File::allFiles(base_path() . '/vendor/composer') as $file)
+            {
+                $path = str_replace(base_path() .'/', '', $file->getPathname());
+                array_push($source, $path);
+            }
+        }
+        return $source;
     }
 
 }
