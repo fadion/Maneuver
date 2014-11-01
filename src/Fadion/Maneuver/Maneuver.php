@@ -1,5 +1,8 @@
 <?php namespace Fadion\Maneuver;
 
+use Banago\Bridge\Bridge;
+use Exception;
+
 /**
  * Class Maneuver
  */
@@ -101,10 +104,17 @@ class Maneuver {
         // There may be one or more servers, but in each
         // case it's build as an array.
         foreach ($servers as $name => $credentials) {
-            $deploy = new Deploy($git, $credentials);
+            try {
+                // Connect to the server using the selected
+                // scheme and options.
+                $bridge = new Bridge(http_build_url('', $credentials));
+            }
+            catch (Exception $e) {
+                print "Oh snap: {$e->getMessage()}";
+                continue;
+            }
 
-            // Try to connect to the server.
-            $deploy->connect();
+            $deploy = new Deploy($git, $bridge, $credentials);
 
             print "\r\n+ --------------- § --------------- +";
             print "\n» Server: $name";
@@ -114,7 +124,6 @@ class Maneuver {
             if ($this->mode == self::MODE_SYNC) {
                 $deploy->setSyncCommit($this->optSyncCommit);
                 $deploy->writeRevision();
-                $deploy->close();
 
                 print "\n √ Synced local revision file to remote";
                 print "\n+ --------------- √ --------------- +\r\n";
@@ -164,9 +173,6 @@ class Maneuver {
             if ($this->mode == self::MODE_ROLLBACK) {
                 $git->revertToMaster();
             }
-
-            // Close connection.
-            $deploy->close();
         }
     }
 

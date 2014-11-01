@@ -1,11 +1,12 @@
 <?php namespace Fadion\Maneuver;
 
+use Banago\Bridge\Bridge;
 use Exception;
 
 /**
  * Class Deploy
  *
- * Handles FTP connection and transfers.
+ * Handles remote server operations.
  */
 class Deploy {
 
@@ -15,14 +16,14 @@ class Deploy {
     protected $git;
 
     /**
+     * @var \Banago\Bridge\Bridge
+     */
+    protected $bridge;
+
+    /**
      * @var string Server credentials
      */
     protected $server;
-
-    /**
-     * @var resource FTP resource
-     */
-    protected $connection;
 
     /**
      * @var string Revision filename
@@ -58,51 +59,15 @@ class Deploy {
      * Constructor
      *
      * @param \Fadion\Maneuver\Git $git
+     * @param \Banago\Bridge\Bridge $bridge
      * @param array $server
      */
-    public function __construct(Git $git, $server)
+    public function __construct(Git $git, Bridge $bridge, $server)
     {
         $this->git = $git;
+        $this->bridge = $bridge;
         $this->ignoredFiles = $git->getIgnored();
         $this->server = $server;
-    }
-
-    /**
-     * Connects to FTP server
-     *
-     * @throws Exception if it can't connect to FTP server
-     * @throws Exception if it can't login to FTP server
-     * @throws Exception if it can't change FTP directory
-     */
-    public function connect()
-    {
-        $server = $this->server;
-
-        // Make sure the path has a trailing slash.
-        $server['path'] = rtrim($server['path'], '/') . '/';
-
-        // Make the connection.
-        $connection = @ftp_connect($server['host'], $server['port']);
-
-        if (!$connection) {
-            throw new Exception("Couldn't connect to '{$server['host']}'.");
-        }
-
-        // Try logging in.
-        if (!@ftp_login($connection, $server['username'], $server['password'])) {
-            throw new Exception("Couldn't login to '{$server['host']}' with user '{$server['username']}'");
-        }
-
-        // Set passive mode from connection config.
-        ftp_pasv($connection, (bool)$server['passive']);
-
-        // Try changing the directory to the one set
-        // in the connection config.
-        if (!ftp_chdir($connection, $server['path'])) {
-            throw new Exception("Couldn't change the FTP directory to '{$server['path']}'.");
-        }
-
-        $this->connection = $connection;
     }
 
     /**
@@ -115,7 +80,6 @@ class Deploy {
     public function compare()
     {
         $remoteRevision = null;
-        $tempFile = tmpfile();
         $filesToUpload = array();
         $filesToDelete = array();
 
@@ -124,17 +88,11 @@ class Deploy {
             $this->revisionFile = $this->isSubmodule . '/' . $this->revisionFile;
         }
 
-        // When a revision file exists, get the version,
-        // so a diff can be made.
-        if (@ftp_fget($this->connection, $tempFile, $this->revisionFile, FTP_ASCII)) {
-            fseek($tempFile, 0);
-            $remoteRevision = trim(fread($tempFile, 1024));
-            fclose($tempFile);
+        if ($this->bridge->exists($this->revisionFile)) {
+            $remoteRevision = $this->bridge->get($this->revisionFile);
 
             $message = "\r\n» Taking it from '" . substr($remoteRevision, 0, 7) . "'";
-        }
-        // Otherwise it will start a fresh upload.
-        else {
+        } else {
             $message = "\r\n» Fresh deployment - grab a coffee";
         }
 
@@ -240,32 +198,29 @@ class Deploy {
         $pathThatExists = null;
         $output = array();
 
-        // Iterate through directory pieces.
-        for ($i = 0, $count = count($dir); $i < $count; $i++) {
-            $path .= $dir[$i].'/';
+        // Skip basedir or parent.
+        if ($dir[0] != '.' and $dir[0] != '..') {
+            // Iterate through directory pieces.
+            for ($i = 0, $count = count($dir); $i < $count; $i++) {
+                $path .= $dir[$i].'/';
 
-            if (!isset($pathThatExists[$path])) {
-                $origin = ftp_pwd($this->connection);
+                if (!isset($pathThatExists[$path])) {
+                    $origin = $this->bridge->pwd();
 
-                // When it fails changing the directory, it means
-                // that it doesn't exist.
-                if (!@ftp_chdir($this->connection, $path)) {
-                    // Attempt to create the directory.
-                    if (!@ftp_mkdir($this->connection, $path)) {
-                        $output[] = "Failed to create '$path'.'";
-                        return $output;
+                    // The directory doesn't exist.
+                    if (! $this->bridge->exists($path)) {
+                        // Attempt to create the directory.
+                        $this->bridge->mkdir($path);
+                        $output[] = "Created directoy '$path'.'";
                     }
+                    // The directory exists.
                     else {
-                        $output[] = "Created directory '$path'.";
-                        $pathThatExists[$path] = true;
+                        $this->bridge->cd($path);
                     }
-                }
-                // The directory exists.
-                else {
-                    $pathThatExists[$path] = true;
-                }
 
-                ftp_chdir($this->connection, $origin);
+                    $pathThatExists[$path] = true;
+                    $this->bridge->cd($origin);
+                }
             }
         }
 
@@ -282,7 +237,8 @@ class Deploy {
                 return $output;
             }
 
-            $uploaded = @ftp_put($this->connection, $file, $file, FTP_BINARY);
+            $data = file_get_contents($file);
+            $uploaded = $this->bridge->put($data, $file);
 
             if (!$uploaded) {
                 $attempts++;
@@ -302,7 +258,7 @@ class Deploy {
      */
     public function delete($file)
     {
-        @ftp_delete($this->connection, $file);
+        $this->bridge->rm($file);
 
         return "× \033[0;37m{$file}\033[0m \033[0;31mremoved\033[0m";
     }
@@ -316,30 +272,17 @@ class Deploy {
     public function writeRevision()
     {
         if ($this->syncCommit) {
-            $locRev = $this->syncCommit;
+            $localRevision = $this->syncCommit;
         } else {
-            $locRev = $this->git->localRevision()[0];
+            $localRevision = $this->git->localRevision()[0];
         }
 
-        $temp = tempnam(sys_get_temp_dir(), 'gitRevision');
-        file_put_contents($temp, $locRev);
-
-        if (ftp_put($this->connection, $this->revisionFile, $temp, FTP_BINARY)) {
-            unlink($temp);
-        } else {
-            unlink($temp);
-            throw new Exception('Could not update the revision file on server.');
+        try {
+            $this->bridge->put($localRevision, $this->revisionFile);
         }
-    }
-
-    /**
-     * Closes FTP connection
-     *
-     * @return void
-     */
-    public function close()
-    {
-        ftp_close($this->connection);
+        catch (Exception $e) {
+            throw new Exception("Could not update the revision file on server: {$e->getMessage()}");
+        }
     }
 
 }

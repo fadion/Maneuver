@@ -37,18 +37,20 @@ return array(
     'connections' => array(
 
         'development' => array(
+            'scheme'    => 'ftp',
             'host'      => 'yourdevserver.com',
-            'username'  => 'user',
-            'password'  => 'myawesomepass',
+            'user'      => 'user',
+            'pass'      => 'myawesomepass',
             'path'      => '/path/to/server/',
             'port'      => 21,
             'passive'   => true
         ),
 
         'production' => array(
+            'scheme'    => 'ftp',
             'host'      => 'yourserver.com',
-            'username'  => 'user',
-            'password'  => 'myawesomepass',
+            'user'      => 'user',
+            'pass'      => 'myawesomepass',
             'path'      => '/path/to/server/',
             'port'      => 21,
             'passive'   => true
