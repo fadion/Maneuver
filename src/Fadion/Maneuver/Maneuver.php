@@ -2,11 +2,8 @@
 
 /**
  * Class Maneuver
- *
- * @package Fadion\Maneuver
  */
-class Maneuver
-{
+class Maneuver {
 
     /**
      * @var null|string $optServer
@@ -22,6 +19,11 @@ class Maneuver
      * @var null|string $optRollback
      */
     protected $optRollback = null;
+
+    /**
+     * @var null|string $optSyncCommit
+     */
+    protected $optSyncCommit = null;
 
     /**
      * @var string $mode
@@ -44,27 +46,32 @@ class Maneuver
     const MODE_ROLLBACK = 'rollback';
 
     /**
+     * @const MODE_SYNC
+     */
+    const MODE_SYNC = 'sync';
+
+    /**
      * Constructor
-     * 
+     *
      * @param array $options
      */
     public function __construct(Array $options = array())
     {
         // Merge options with a set of null defaults,
         // so parameters can be omitted safely.
-        $defaults = array('server' => null, 'repo' => null, 'rollback' => null);
+        $defaults = array('server' => null, 'repo' => null, 'rollback' => null, 'sync' => null);
         $options = array_merge($defaults, $options);
 
         $this->optServer = $options['server'];
         $this->optRepo = $options['repo'];
         $this->optRollback = $options['rollback'];
+        $this->optSyncCommit = $options['sync'];
     }
 
     /**
      * Sets mode
-     * 
+     *
      * @param string $mode
-     * @return void
      */
     public function mode($mode)
     {
@@ -73,8 +80,6 @@ class Maneuver
 
     /**
      * Starts the Maneuver
-     * 
-     * @return void
      */
     public function start()
     {
@@ -85,8 +90,7 @@ class Maneuver
         $rollback = null;
 
         // When in rollback mode, get the commit.
-        if ($this->mode == self::MODE_ROLLBACK)
-        {
+        if ($this->mode == self::MODE_ROLLBACK) {
             $rollback = array('commit' => $this->optRollback);
         }
 
@@ -96,8 +100,7 @@ class Maneuver
 
         // There may be one or more servers, but in each
         // case it's build as an array.
-        foreach ($servers as $name => $credentials)
-        {
+        foreach ($servers as $name => $credentials) {
             $deploy = new Deploy($git, $credentials);
 
             // Try to connect to the server.
@@ -106,9 +109,21 @@ class Maneuver
             print "\r\n+ --------------- § --------------- +";
             print "\n» Server: $name";
 
+            // Sync mode. Write revision and close the
+            // connection, so no other files are uploaded.
+            if ($this->mode == self::MODE_SYNC) {
+                $deploy->setSyncCommit($this->optSyncCommit);
+                $deploy->writeRevision();
+                $deploy->close();
+
+                print "\n √ Synced local revision file to remote";
+                print "\n+ --------------- √ --------------- +\r\n";
+
+                continue;
+            }
+
             // Rollback to the specified commit.
-            if ($this->mode == self::MODE_ROLLBACK)
-            {
+            if ($this->mode == self::MODE_ROLLBACK) {
                 print "\n« Rolling back ";
                 $git->rollback();
             }
@@ -117,10 +132,8 @@ class Maneuver
             $dirtySubmodules = false;
 
             // Check if there are any submodules.
-            if ($git->getSubModules())
-            {
-                foreach ($git->getSubModules() as $submodule)
-                {
+            if ($git->getSubModules()) {
+                foreach ($git->getSubModules() as $submodule) {
                     // Change repo.
                     $git->setRepo($submodule['path']);
 
@@ -135,25 +148,20 @@ class Maneuver
 
             // Files are uploaded or deleted, for the main
             // repo or submodules.
-            if (($dirtyRepo or $dirtySubmodules))
-            {
-                if ($this->mode == self::MODE_DEPLOY or
-                    $this->mode == self::MODE_ROLLBACK)
-                {
+            if (($dirtyRepo or $dirtySubmodules)) {
+                if ($this->mode == self::MODE_DEPLOY or $this->mode == self::MODE_ROLLBACK) {
                     // Write latest revision to server.
                     $deploy->writeRevision();
                 }
             }
-            else
-            {
+            else {
                 print "\n» Nothing to do.";
             }
 
             print "\n+ --------------- √ --------------- +\r\n";
 
             // On rollback mode, revert to master.
-            if ($this->mode == self::MODE_ROLLBACK)
-            {
+            if ($this->mode == self::MODE_ROLLBACK) {
                 $git->revertToMaster();
             }
 
@@ -181,13 +189,10 @@ class Maneuver
         $filesToUpload = $deploy->getFilesToUpload();
         $filesToDelete = $deploy->getFilesToDelete();
 
-        if ($filesToUpload)
-        {
-            foreach ($filesToUpload as $file)
-            {
+        if ($filesToUpload) {
+            foreach ($filesToUpload as $file) {
                 // On list mode, just print the file.
-                if ($this->mode == self::MODE_LIST)
-                {
+                if ($this->mode == self::MODE_LIST) {
                     print "\n√ \033[0;37m{$file}\033[0m \033[0;32mwill be uploaded\033[0m";
                     continue;
                 }
@@ -196,32 +201,27 @@ class Maneuver
 
                 // An upload procedure may have more than one
                 // output message (uploaded file, created dir, etc).
-                foreach ($output as $message)
-                {
-                    print "\n".$message;
+                foreach ($output as $message) {
+                    print "\n" . $message;
                 }
             }
         }
 
-        if ($filesToDelete)
-        {
-            foreach ($filesToDelete as $file)
-            {
+        if ($filesToDelete) {
+            foreach ($filesToDelete as $file) {
                 // On list mode, just print the file.
-                if ($this->mode == self::MODE_LIST)
-                {
+                if ($this->mode == self::MODE_LIST) {
                     print "\n× \033[0;37m{$file}\033[0m \033[0;31mwill be removed\033[0m";
                     continue;
                 }
 
-                print "\n".$deploy->delete($file);
+                print "\n" . $deploy->delete($file);
             }
         }
 
         // Files were uploaded or deleted, so mark
         // it as dirty.
-        if ($filesToUpload or $filesToDelete)
-        {
+        if ($filesToUpload or $filesToDelete) {
             $dirty = true;
         }
 

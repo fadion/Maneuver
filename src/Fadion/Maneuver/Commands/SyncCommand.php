@@ -6,21 +6,21 @@ use Symfony\Component\Console\Input\InputArgument;
 use Fadion\Maneuver\Maneuver;
 use Exception;
 
-class ListCommand extends Command {
+class SyncCommand extends Command {
 
     /**
      * The console command name.
      *
      * @var string
      */
-    protected $name = 'deploy:list';
+    protected $name = 'deploy:sync';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'List changed files since the last deployment.';
+    protected $description = 'Sync remote revision file with the local one.';
 
     /**
      * Create a new command instance.
@@ -42,11 +42,12 @@ class ListCommand extends Command {
         try {
             $options = array(
                 'server' => $this->option('server'),
-                'repo' => $this->option('repo')
+                'repo' => $this->option('repo'),
+                'sync' => $this->option('commit')
             );
 
             $maneuver = new Maneuver($options);
-            $maneuver->mode(Maneuver::MODE_LIST);
+            $maneuver->mode(Maneuver::MODE_SYNC);
             $maneuver->start();
         }
         catch (Exception $e) {
@@ -74,6 +75,7 @@ class ListCommand extends Command {
         return array(
             array('server', 's', InputOption::VALUE_IS_ARRAY | InputOption::VALUE_OPTIONAL, 'Server to deploy to.', null),
             array('repo', 'r', InputOption::VALUE_OPTIONAL, 'Repository to use.', null),
+            array('commit', 'c', InputOption::VALUE_OPTIONAL, 'Commit to sync to.', null)
         );
     }
 

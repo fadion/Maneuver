@@ -4,6 +4,7 @@ use Illuminate\Support\ServiceProvider;
 use Fadion\Maneuver\Commands\DeployCommand;
 use Fadion\Maneuver\Commands\ListCommand;
 use Fadion\Maneuver\Commands\RollbackCommand;
+use Fadion\Maneuver\Commands\SyncCommand;
 
 class ManeuverServiceProvider extends ServiceProvider
 {
@@ -32,24 +33,26 @@ class ManeuverServiceProvider extends ServiceProvider
 	 */
 	public function register()
 	{
-        $this->app['artisan.maneuver.deploy'] = $this->app->share(function($app)
-        {
+        $this->app['artisan.maneuver.deploy'] = $this->app->share(function($app) {
             return new DeployCommand;
         });
 
-        $this->app['artisan.maneuver.list'] = $this->app->share(function($app)
-        {
+        $this->app['artisan.maneuver.list'] = $this->app->share(function($app) {
             return new ListCommand;
         });
 
-        $this->app['artisan.maneuver.rollback'] = $this->app->share(function($app)
-        {
+        $this->app['artisan.maneuver.rollback'] = $this->app->share(function($app) {
             return new RollbackCommand;
+        });
+
+        $this->app['artisan.maneuver.sync'] = $this->app->share(function($app) {
+            return new SyncCommand;
         });
 
         $this->commands('artisan.maneuver.deploy');
         $this->commands('artisan.maneuver.list');
         $this->commands('artisan.maneuver.rollback');
+        $this->commands('artisan.maneuver.sync');
 	}
 
 	/**

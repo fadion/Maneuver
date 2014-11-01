@@ -6,15 +6,8 @@ use Exception;
  * Class Deploy
  *
  * Handles FTP connection and transfers.
- *
- * @package Fadion\Maneuver\Deploy
- * @author Fadion Dashi <jonidashi@gmail.com>
- * @author Baki Goxhaj <banago@gmail.com>
- * @licence MIT
- * @version 1.0
  */
-class Deploy
-{
+class Deploy {
 
     /**
      * @var \Fadion\Maneuver\Git
@@ -35,6 +28,11 @@ class Deploy
      * @var string Revision filename
      */
     protected $revisionFile = '.revision';
+
+    /**
+     * @var string Commit to sync revision file to
+     */
+    protected $syncCommit;
 
     /**
      * @var bool
@@ -60,7 +58,7 @@ class Deploy
      * Constructor
      *
      * @param \Fadion\Maneuver\Git $git
-     * @param $server
+     * @param array $server
      */
     public function __construct(Git $git, $server)
     {
@@ -72,7 +70,6 @@ class Deploy
     /**
      * Connects to FTP server
      *
-     * @return void
      * @throws Exception if it can't connect to FTP server
      * @throws Exception if it can't login to FTP server
      * @throws Exception if it can't change FTP directory
@@ -82,29 +79,26 @@ class Deploy
         $server = $this->server;
 
         // Make sure the path has a trailing slash.
-        $server['path'] = rtrim($server['path'], '/').'/';
+        $server['path'] = rtrim($server['path'], '/') . '/';
 
         // Make the connection.
         $connection = @ftp_connect($server['host'], $server['port']);
 
-        if (! $connection)
-        {
+        if (!$connection) {
             throw new Exception("Couldn't connect to '{$server['host']}'.");
         }
 
         // Try logging in.
-        if (! @ftp_login($connection, $server['username'], $server['password']))
-        {
+        if (!@ftp_login($connection, $server['username'], $server['password'])) {
             throw new Exception("Couldn't login to '{$server['host']}' with user '{$server['username']}'");
         }
 
         // Set passive mode from connection config.
-        ftp_pasv($connection, (bool) $server['passive']);
+        ftp_pasv($connection, (bool)$server['passive']);
 
         // Try changing the directory to the one set
         // in the connection config.
-        if (! ftp_chdir($connection, $server['path']))
-        {
+        if (!ftp_chdir($connection, $server['path'])) {
             throw new Exception("Couldn't change the FTP directory to '{$server['path']}'.");
         }
 
@@ -115,8 +109,8 @@ class Deploy
      * Compares local revision to the remote one and
      * builds files to upload and delete
      *
-     * @return string
      * @throws Exception if unknown git diff status
+     * @return string
      */
     public function compare()
     {
@@ -126,55 +120,46 @@ class Deploy
         $filesToDelete = array();
 
         // The revision file goes inside the submodule.
-        if ($this->isSubmodule)
-        {
-            $this->revisionFile = $this->isSubmodule.'/'.$this->revisionFile;
+        if ($this->isSubmodule) {
+            $this->revisionFile = $this->isSubmodule . '/' . $this->revisionFile;
         }
 
         // When a revision file exists, get the version,
         // so a diff can be made.
-        if (@ftp_fget($this->connection, $tempFile, $this->revisionFile, FTP_ASCII))
-        {
+        if (@ftp_fget($this->connection, $tempFile, $this->revisionFile, FTP_ASCII)) {
             fseek($tempFile, 0);
             $remoteRevision = trim(fread($tempFile, 1024));
             fclose($tempFile);
 
-            $message = "\r\n» Taking it from '".substr($remoteRevision, 0, 7)."'";
+            $message = "\r\n» Taking it from '" . substr($remoteRevision, 0, 7) . "'";
         }
         // Otherwise it will start a fresh upload.
-        else
-        {
+        else {
             $message = "\r\n» Fresh deployment - grab a coffee";
         }
 
         // A remote version exists.
-        if ($remoteRevision)
-        {
+        if ($remoteRevision) {
             // Get the files from the diff.
             $output = $this->git->diff($remoteRevision);
 
-            foreach ($output as $line)
-            {
+            foreach ($output as $line) {
                 // Added, changed or modified.
-                if ($line[0] == 'A' or $line[0] == 'C' or $line[0] == 'M')
-                {
+                if ($line[0] == 'A' or $line[0] == 'C' or $line[0] == 'M') {
                     $filesToUpload[] = trim(substr($line, 1));
                 }
                 // Deleted.
-                elseif ($line[0] == 'D')
-                {
+                elseif ($line[0] == 'D') {
                     $filesToDelete[] = trim(substr($line, 1));
                 }
                 // Unknown status.
-                else
-                {
+                else {
                     throw new Exception("Unknown git-diff status: {$line[0]}");
                 }
             }
         }
         // No remote version. Get all files.
-        else
-        {
+        else {
             $filesToUpload = $this->git->files();
         }
 
@@ -218,21 +203,9 @@ class Deploy
     }
 
     /**
-     * Setter for $this->repo
-     *
-     * @param $value
-     * @return void
-     */
-    public function setRepo($value)
-    {
-        $this->repo = $value;
-    }
-
-    /**
      * Setter for $this->isSubmodule
      *
-     * @param $value
-     * @return void
+     * @param string $value
      */
     public function setIsSubmodule($value)
     {
@@ -240,15 +213,25 @@ class Deploy
     }
 
     /**
+     * Sets the commit to sync revision
+     * file to
+     *
+     * @param string $value
+     */
+    public function setSyncCommit($value)
+    {
+        $this->syncCommit = $value;
+    }
+
+    /**
      * Uploads file
      *
-     * @param $file
+     * @param string $file
      * @return array
      */
     public function upload($file)
     {
-        if ($this->isSubmodule)
-        {
+        if ($this->isSubmodule) {
             $file = $this->isSubmodule.'/'.$file;
         }
 
@@ -258,33 +241,27 @@ class Deploy
         $output = array();
 
         // Iterate through directory pieces.
-        for ($i = 0, $count = count($dir); $i < $count; $i++)
-        {
+        for ($i = 0, $count = count($dir); $i < $count; $i++) {
             $path .= $dir[$i].'/';
 
-            if (! isset($pathThatExists[$path]))
-            {
+            if (!isset($pathThatExists[$path])) {
                 $origin = ftp_pwd($this->connection);
 
                 // When it fails changing the directory, it means
                 // that it doesn't exist.
-                if (! @ftp_chdir($this->connection, $path))
-                {
+                if (!@ftp_chdir($this->connection, $path)) {
                     // Attempt to create the directory.
-                    if (! @ftp_mkdir($this->connection, $path))
-                    {
+                    if (!@ftp_mkdir($this->connection, $path)) {
                         $output[] = "Failed to create '$path'.'";
                         return $output;
                     }
-                    else
-                    {
+                    else {
                         $output[] = "Created directory '$path'.";
                         $pathThatExists[$path] = true;
                     }
                 }
                 // The directory exists.
-                else
-                {
+                else {
                     $pathThatExists[$path] = true;
                 }
 
@@ -297,20 +274,17 @@ class Deploy
 
         // Loop until $uploaded becomes a valid
         // resource.
-        while (! $uploaded)
-        {
+        while (!$uploaded) {
             // Attempt to upload the file 10 times
             // and exit if it fails.
-            if ($attempts == 10)
-            {
+            if ($attempts == 10) {
                 $output[] = "Tried to upload $file 10 times, and failed 10 times. Something is wrong, so I'm going to stop executing now.";
                 return $output;
             }
 
             $uploaded = @ftp_put($this->connection, $file, $file, FTP_BINARY);
 
-            if (! $uploaded)
-            {
+            if (!$uploaded) {
                 $attempts++;
             }
         }
@@ -336,22 +310,31 @@ class Deploy
     /**
      * Writes latest revision to the remote
      * revision file
-     * 
-     * @return void
+     *
+     * @throws Exception if can't update revision file
      */
     public function writeRevision()
     {
-        $locRev = $this->git->localRevision();
-        $temp = tempnam(sys_get_temp_dir(), 'gitRevision');
+        if ($this->syncCommit) {
+            $locRev = $this->syncCommit;
+        } else {
+            $locRev = $this->git->localRevision()[0];
+        }
 
+        $temp = tempnam(sys_get_temp_dir(), 'gitRevision');
         file_put_contents($temp, $locRev);
-        ftp_put($this->connection, $this->revisionFile, $temp, FTP_BINARY);
-        unlink($temp);
+
+        if (ftp_put($this->connection, $this->revisionFile, $temp, FTP_BINARY)) {
+            unlink($temp);
+        } else {
+            unlink($temp);
+            throw new Exception('Could not update the revision file on server.');
+        }
     }
 
     /**
      * Closes FTP connection
-     * 
+     *
      * @return void
      */
     public function close()

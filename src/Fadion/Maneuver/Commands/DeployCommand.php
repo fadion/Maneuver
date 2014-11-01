@@ -6,8 +6,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Fadion\Maneuver\Maneuver;
 use Exception;
 
-class DeployCommand extends Command
-{
+class DeployCommand extends Command {
 
     /**
      * The console command name.
@@ -40,8 +39,7 @@ class DeployCommand extends Command
      */
     public function fire()
     {
-        try
-        {
+        try {
             $options = array(
                 'server' => $this->option('server'),
                 'repo' => $this->option('repo')
@@ -51,8 +49,7 @@ class DeployCommand extends Command
             $maneuver->mode(Maneuver::MODE_DEPLOY);
             $maneuver->start();
         }
-        catch(Exception $e)
-        {
+        catch (Exception $e) {
             $this->error($e->getMessage());
         }
     }

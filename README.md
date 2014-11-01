@@ -68,7 +68,7 @@ There's even a shortcut option:
 
 ### List Changed Files
 
-For convenience, you can view a list of changed files since your last deployment. Just type:
+For convenience, you can view a list of changed files since your last deployment:
 
     php artisan deploy:list
 
@@ -82,11 +82,11 @@ As you've guessed, running this command will still connect to your server(s), bu
 
 Rolling back is a facility, which does the heavy lifting for you by moving temporarily to a previous commit and deploying those files. After the run, the Git repo will be reverted as it was before the command. Use it as a quick way to rollback your files in the server, but not as a way to modify your Git repo.
 
-To rollback to the previous commit, just run:
+To rollback to the previous commit:
 
     php artisan deploy:rollback
 
-If you want to rollback to a specific commit, type:
+If you want to rollback to a specific commit:
 
     php artisan deploy:rollback --commit=<hash>
 
@@ -94,8 +94,16 @@ If you want to rollback to a specific commit, type:
 
 To achieve synchronization, Maneuver will store a `.revision` file in your server(s), which contains the hash of the latest deployment commit. Deleting that file will trigger a fresh deployment and all your files will be transfered again. Editing it's contents should be avoided, otherwise very strange things may happen.
 
-## Authors
+### Syncing the Remote Revision File
 
-**Fadion Dashi** is the author of Maneuver. He's a PHP, Laravel and Objective-C developer that lives in Tirana, Albania and runs his own company at [Streha shpk](http://www.streha.al).
-
-**Baki Goxhaj** is the author of PHPloy, on which Maneuver is based. He's a freelance PHP, Laravel and Wordpress developer that lives in Vlora, Albania. Find him at [WPLancer](http://www.wplancer.com).
+The remove revision file is handled automatically and it's generally the required behaviour. For those case when you'll need to update it's contents, you can sync it with the current local revision or a commit hash of your choice.
+ 
+ Sync to the current local revision:
+ 
+    php artisan deploy:sync
+    
+ Sync to a specific commit:
+ 
+    php artisan deploy:sync --commit=<hash>
+    
+ Running the `sync` command will connect to your server(s) and update the `.revision` file, but no other uploads will be made.

@@ -8,15 +8,8 @@ use Exception;
  *
  * Handles the reading of git repos, submodules
  * and other git commands.
- *
- * @package Fadion\Maneuver\Git
- * @author Fadion Dashi <jonidashi@gmail.com>
- * @author Baki Goxhaj <banago@gmail.com>
- * @licence MIT
- * @version 1.0
  */
-class Git
-{
+class Git {
 
     /**
      * @var string Git revision
@@ -42,7 +35,7 @@ class Git
      * Constructor
      *
      * @param null|string $repo
-     * @param null|array $rollback
+     * @param array $rollback
      * @throws Exception if not a Git repository
      */
     public function __construct($repo = null, $rollback)
@@ -51,16 +44,14 @@ class Git
 
         // A rollback is called, so set the specified
         // commit, or to HEAD^ (one commit before).
-        if (isset($rollback))
-        {
+        if (isset($rollback)) {
             $this->revision = ($rollback['commit']) ? $rollback['commit'] : 'HEAD^';
         }
 
         $this->repo = (isset($repo)) ? rtrim($repo, '/') : getcwd();
 
         // Check if it's a git repository.
-        if (! file_exists("$this->repo/.git"))
-        {
+        if (!file_exists("$this->repo/.git")) {
             throw new Exception("'$this->repo' is not a Git repository.");
         }
 
@@ -69,34 +60,55 @@ class Git
         // Load the ignored files array from config.
         $ignored = app()->config['maneuver::config.ignored'];
 
-        if ($ignored)
-        {
-            foreach ($ignored as $file)
-            {
+        if ($ignored) {
+            foreach ($ignored as $file) {
                 $this->ignore($file);
             }
         }
     }
 
     /**
+     * Runs a Git command.
+     *
+     * @param string $command
+     * @param null|string $repoPath
+     * @throws Exception if command fails
+     * @return array
+     */
+    protected function command($command, $repoPath = null)
+    {
+        if (!$repoPath) {
+            $repoPath = $this->repo;
+        }
+
+        $command = 'git --git-dir="'.$repoPath.'/.git" --work-tree="'.$repoPath.'" '.$command;
+
+        exec(escapeshellcmd($command), $output, $returnStatus);
+
+        if ($returnStatus != 0) {
+            throw new Exception("The following command was attempted but failed:\r\n$command");
+        }
+
+        return $output;
+    }
+
+    /**
      * Checks submodules
-     * 
-     * @return void
+     *
      */
     protected function subModules()
     {
         $repo = $this->repo;
-        $command = "git --git-dir=\"$repo/.git\" --work-tree=\"$repo\" submodule status";
-        $output = array();
+        $output = $this->command('submodule status');
 
-        exec(escapeshellcmd($command), $output);
-
-        if ($output)
-        {
-            foreach ($output as $line)
-            {
+        if ($output) {
+            foreach ($output as $line) {
                 $line = explode(' ', trim($line));
-                $this->submodules[] = array('revision' => $line[0], 'name' => $line[1], 'path' => $repo.'/'.$line[1]);
+                $this->submodules[] = array(
+                    'revision' => $line[0],
+                    'name' => $line[1],
+                    'path' => $repo.'/'.$line[1]
+                );
                 $this->ignoredFiles[] = $line[1];
                 $this->checkSubSubmodules($repo, $line[1]);
             }
@@ -108,24 +120,22 @@ class Git
      *
      * @param string $repo
      * @param string $name
-     * @return void
      */
     protected function checkSubSubmodules($repo, $name)
     {
-        $command = "git --git-dir=\"$repo/.git\" --work-tree=\"$repo\" submodule foreach git submodule status";
-        $output = array();
+        $output = $this->command('submodule foreach git submodule status');
 
-        exec(escapeshellcmd($command), $output);
-
-        if ($output)
-        {
-            foreach ($output as $line)
-            {
+        if ($output) {
+            foreach ($output as $line) {
                 $line = explode(' ', trim($line));
 
                 if (trim($line[0]) == 'Entering') continue;
 
-                $this->submodules[] = array('revision' => $line[0], 'name' => $name.'/'.$line[1], 'path' => $repo.'/'.$name.'/'.$line[1]);
+                $this->submodules[] = array(
+                    'revision' => $line[0],
+                    'name' => $name.'/'.$line[1],
+                    'path' => $repo.'/'.$name.'/'.$line[1]
+                );
                 $this->ignoredFiles[] = $name.'/'.$line[1];
             }
         }
@@ -139,18 +149,15 @@ class Git
      */
     public function diff($revision)
     {
-        if ($this->revision == 'HEAD')
-        {
-            $command = "git --git-dir=\"$this->repo/.git\" --work-tree=\"$this->repo\" diff --name-status {$revision}...{$this->revision}";
+        if (! $revision) {
+            return $this->command('ls-files');
         }
-        else
-        {
-            $command = "git --git-dir=\"$this->repo/.git\" --work-tree=\"$this->repo\" diff --name-status {$revision}... {$this->revision}";
+        elseif ($this->revision == 'HEAD') {
+            return $this->command("diff --name-status {$revision}...{$this->revision}");
         }
-
-        exec(escapeshellcmd($command), $output);
-
-        return $output;
+        else {
+            return $this->command("diff --name-status {$revision}... {$this->revision}");
+        }
     }
 
     /**
@@ -160,10 +167,7 @@ class Git
      */
     public function files()
     {
-        $command = "git --git-dir=\"$this->repo/.git\" --work-tree=\"$this->repo\" ls-files";
-        exec(escapeshellcmd($command), $output);
-
-        return $output;
+        return $this->command('ls-files');
     }
 
     /**
@@ -173,9 +177,7 @@ class Git
      */
     public function localRevision()
     {
-        $command = "git --git-dir=\"$this->repo/.git\" --work-tree=\"$this->repo\" rev-parse HEAD";
-
-        return exec(escapeshellcmd($command));
+        return $this->command('rev-parse HEAD');
     }
 
     /**
@@ -185,9 +187,7 @@ class Git
      */
     public function rollback()
     {
-        $command = 'git --git-dir="'.$this->repo.'/.git" --work-tree="'.$this->repo.'" checkout '.$this->revision;
-
-        return exec(escapeshellcmd($command));
+        return $this->command("checkout {$this->revision}");
     }
 
     /**
@@ -197,16 +197,13 @@ class Git
      */
     public function revertToMaster()
     {
-        $command = 'git --git-dir="'.$this->repo.'/.git" --work-tree="'.$this->repo.'" checkout master';
-
-        return exec(escapeshellcmd($command));
+        return $this->command('checkout master');
     }
 
     /**
      * Adds files to ignore list
      *
      * @param $file
-     * @return void
      */
     protected function ignore($file)
     {

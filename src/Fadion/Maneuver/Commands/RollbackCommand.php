@@ -6,8 +6,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Fadion\Maneuver\Maneuver;
 use Exception;
 
-class RollbackCommand extends Command
-{
+class RollbackCommand extends Command {
 
     /**
      * The console command name.
@@ -40,8 +39,7 @@ class RollbackCommand extends Command
      */
     public function fire()
     {
-        try
-        {
+        try {
             $options = array(
                 'server' => $this->option('server'),
                 'repo' => $this->option('repo'),
@@ -52,8 +50,7 @@ class RollbackCommand extends Command
             $maneuver->mode(Maneuver::MODE_ROLLBACK);
             $maneuver->start();
         }
-        catch(Exception $e)
-        {
+        catch (Exception $e) {
             $this->error($e->getMessage());
         }
     }
