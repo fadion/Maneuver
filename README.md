@@ -96,7 +96,7 @@ To achieve synchronization, Maneuver will store a `.revision` file in your serve
 
 ### Syncing the Remote Revision File
 
-The remove revision file is handled automatically and it's generally the required behaviour. For those case when you'll need to update it's contents, you can sync it with the current local revision or a commit hash of your choice.
+The remote revision file is handled automatically and it's generally the required behaviour. For those cases when you'll need to update it's contents, you can sync it with the current local revision or a commit hash of your choice.
  
  Sync to the current local revision:
  
