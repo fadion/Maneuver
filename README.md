@@ -1,4 +1,4 @@
-> Maneuver was recently updated to use SFTP, in addition to FTP. This change doesn't break any API, except a few simple configuration changes. You'll need to add a `scheme` option to your servers with either `ftp` or `ssh2` as a value. In addition, the `username` field will have to be renamed to `user` and `password` to `pass`.
+> Maneuver was recently updated to use SFTP, in addition to FTP. This change doesn't break any API, except a few simple configuration changes. You'll need to add a `scheme` option to your servers with either `ftp` or `ssh` as a value. In addition, the `username` field will have to be renamed to `user` and `password` to `pass`.
 
 > This release is tagged with a version. Please update your composer as instructed in the [Installation](#installation) section.
 
@@ -42,7 +42,7 @@ The first step is to add servers in the configuration file. If you followed step
 
 Add one or more servers in the `connections` array, providing a unique, recognizable name for each. Credentials should obviously be entered too. Optionally, specify a default server for deployment, by entering the server's name in the `default` option. Changes will be deployed to that server if not overriden. In case you leave the `default` option empty, deployment will be run to all the servers.
 
-Don't forget to set the `scheme` for your servers to either `ftp` or `ssh2` for SFTP.
+Don't forget to set the `scheme` for your servers to either `ftp` or `ssh` for SFTP.
 
 ## Usage
 
