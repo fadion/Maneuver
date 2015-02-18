@@ -2,6 +2,8 @@
 
 > This release is tagged with a version. Please update your composer as instructed in the [Installation](#installation) section.
 
+> To use it in Laravel 5, please see the `l5` branch.
+
 # Maneuver
 
 A Laravel package that makes deployment as easy as it has never been. It uses Git to read file changes and deploys to your server(s) via FTP or SFTP. **Why Git?** Because anyone should already version their files and if they do, it's almost certain they're using Git. **Why FTP?** Because it is the easiest transport protocol to implement and use.
