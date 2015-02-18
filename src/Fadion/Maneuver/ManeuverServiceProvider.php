@@ -23,7 +23,9 @@ class ManeuverServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->package('fadion/maneuver');
+        $this->publishes([
+            __DIR__ . '/../../config/config.php' => config_path('maneuver.php')
+        ]);
     }
 
 	/**
