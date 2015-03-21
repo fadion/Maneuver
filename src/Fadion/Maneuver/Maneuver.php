@@ -105,9 +105,11 @@ class Maneuver {
         // case it's build as an array.
         foreach ($servers as $name => $credentials) {
             try {
+                $options = isset($credentials['options']) ? $credentials['options'] : array();
+
                 // Connect to the server using the selected
                 // scheme and options.
-                $bridge = new Bridge(http_build_url('', $credentials));
+                $bridge = new Bridge(http_build_url('', $credentials), $options);
             }
             catch (Exception $e) {
                 print "Oh snap: {$e->getMessage()}";
