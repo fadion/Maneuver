@@ -152,12 +152,8 @@ class Git {
         if (! $revision) {
             return $this->command('ls-files');
         }
-        elseif ($this->revision == 'HEAD') {
-            return $this->command("diff --name-status {$revision}...{$this->revision}");
-        }
-        else {
-            return $this->command("diff --name-status {$revision}... {$this->revision}");
-        }
+        
+        return $this->command("diff --name-status --no-renames {$revision}... {$this->revision}");
     }
 
     /**
