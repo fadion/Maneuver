@@ -32,6 +32,11 @@ class SyncCommand extends Command {
         parent::__construct();
     }
 
+    /**
+     * Calls the fire method
+     *
+     * @return void
+     */
     public function handle() {
       $this->fire();
     }
