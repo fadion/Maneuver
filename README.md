@@ -1,9 +1,3 @@
-> Maneuver was recently updated to use SFTP, in addition to FTP. This change doesn't break any API, except a few simple configuration changes. You'll need to add a `scheme` option to your servers with either `ftp` or `ssh` as a value. In addition, the `username` field will have to be renamed to `user` and `password` to `pass`.
-
-> This release is tagged with a version. Please update your composer as instructed in the [Installation](#installation) section.
-
-> To use it in Laravel 5, please see the `l5` branch.
-
 # Maneuver
 
 A Laravel package that makes deployment as easy as it has never been. It uses Git to read file changes and deploys to your server(s) via FTP or SFTP. **Why Git?** Because anyone should already version their files and if they do, it's almost certain they're using Git. **Why FTP?** Because it is the easiest transport protocol to implement and use.
@@ -29,18 +23,18 @@ Maneuver solves these problems with a very simple approach. It takes the best of
 ```json
 {
     "require": {
-        "fadion/maneuver": "~1.0"
+        "fadion/maneuver": "2.0.*"
     }
 }
 ```
 
 2. Add `Fadion\Maneuver\ManeuverServiceProvider` to your `app/config/app.php` file, inside the `providers` array.
 
-3. Publish the package's config with `php artisan config:publish fadion/maneuver`, so you can easily modify it in: `app/config/packages/fadion/maneuver/config.php`
+3. Publish the package's config with `php artisan vendor:publish`, so you can easily modify it in: `config/maneuver.php`.
 
 ## Configuration
 
-The first step is to add servers in the configuration file. If you followed step 3 above, you'll find it in `app/config/packages/fadion/maneuver/config.php`.
+The first step is to add servers in the configuration file. If you followed step 3 above, you'll find it in `config/maneuver.php`.
 
 Add one or more servers in the `connections` array, providing a unique, recognizable name for each. Credentials should obviously be entered too. Optionally, specify a default server for deployment, by entering the server's name in the `default` option. Changes will be deployed to that server if not overriden. In case you leave the `default` option empty, deployment will be run to all the servers.
 

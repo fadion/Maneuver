@@ -26,8 +26,8 @@ class Connection {
     public function __construct($server = null)
     {
         // Load connections array from config.
-        $connections = app()->config['maneuver::config.connections'];
-        $default = app()->config['maneuver::config.default'];
+        $connections = config('maneuver.connections');
+        $default = config('maneuver.default');
 
         if (!$connections) {
             throw new Exception("Connections list not set or empty. Please fill it with servers in Maneuver's config.");

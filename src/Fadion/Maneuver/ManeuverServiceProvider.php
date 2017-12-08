@@ -9,12 +9,12 @@ use Fadion\Maneuver\Commands\SyncCommand;
 class ManeuverServiceProvider extends ServiceProvider
 {
 
-	/**
-	 * Indicates if loading of the provider is deferred.
-	 *
-	 * @var bool
-	 */
-	protected $defer = false;
+    /**
+     * Indicates if loading of the provider is deferred.
+     *
+     * @var bool
+     */
+    protected $defer = false;
 
     /**
      * Boot the service provider.
@@ -23,46 +23,34 @@ class ManeuverServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->package('fadion/maneuver');
+        $this->publishes([
+            __DIR__ . '/../../config/config.php' => config_path('maneuver.php')
+        ]);
     }
 
-	/**
-	 * Register the service provider.
-	 *
-	 * @return void
-	 */
-	public function register()
-	{
-        $this->app['artisan.maneuver.deploy'] = $this->app->share(function($app) {
-            return new DeployCommand;
-        });
+    /**
+     * Register the service provider.
+     *
+     * @return void
+     */
+    public function register()
+    {
+        $this->commands([
+            Commands\DeployCommand::class,
+            Commands\ListCommand::class,
+            Commands\RollbackCommand::class,
+            Commands\SyncCommand::class,
+        ]);
+    }
 
-        $this->app['artisan.maneuver.list'] = $this->app->share(function($app) {
-            return new ListCommand;
-        });
-
-        $this->app['artisan.maneuver.rollback'] = $this->app->share(function($app) {
-            return new RollbackCommand;
-        });
-
-        $this->app['artisan.maneuver.sync'] = $this->app->share(function($app) {
-            return new SyncCommand;
-        });
-
-        $this->commands('artisan.maneuver.deploy');
-        $this->commands('artisan.maneuver.list');
-        $this->commands('artisan.maneuver.rollback');
-        $this->commands('artisan.maneuver.sync');
-	}
-
-	/**
-	 * Get the services provided by the provider.
-	 *
-	 * @return array
-	 */
-	public function provides()
-	{
-		return array('maneuver');
-	}
+    /**
+     * Get the services provided by the provider.
+     *
+     * @return array
+     */
+    public function provides()
+    {
+        return array('maneuver');
+    }
 
 }

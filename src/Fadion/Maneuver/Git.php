@@ -58,7 +58,7 @@ class Git {
         $this->subModules();
 
         // Load the ignored files array from config.
-        $ignored = app()->config['maneuver::config.ignored'];
+        $ignored = config('maneuver.ignored');
 
         if ($ignored) {
             foreach ($ignored as $file) {
