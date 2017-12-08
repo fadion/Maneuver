@@ -18,17 +18,25 @@ Maneuver solves these problems with a very simple approach. It takes the best of
 
 ## Installation
 
+First identify the version of Maneuver you need based on your Laravel installation. You'll want to use that specific version in the step below.
+
+| Laravel Version  | Maneuver Version |
+| ------------- | ------------- |
+| Laravel 4  | ~1.0  |
+| Laravel 5.0 - 5.4  | 2.0.*  |
+| Laravel 5.5  | 2.1.*  |
+
 1. Add the package to your composer.json file and run `composer update`:
 
 ```json
 {
     "require": {
-        "fadion/maneuver": "2.0.*"
+        "fadion/maneuver": "2.1.*"
     }
 }
 ```
 
-2. Add `Fadion\Maneuver\ManeuverServiceProvider` to your `app/config/app.php` file, inside the `providers` array.
+2. Add `Fadion\Maneuver\ManeuverServiceProvider` to your `config/app.php` file, inside the `providers` array.
 
 3. Publish the package's config with `php artisan vendor:publish`, so you can easily modify it in: `config/maneuver.php`.
 
