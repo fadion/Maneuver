@@ -33,6 +33,15 @@ class DeployCommand extends Command {
     }
 
     /**
+     * Calls the fire method
+     *
+     * @return void
+     */
+    public function handle() {
+      $this->fire();
+    }
+
+    /**
      * Execute the console command.
      *
      * @return mixed
