@@ -8,8 +8,8 @@ use Exception;
  *
  * Handles remote server operations.
  */
-class Deploy {
-
+class Deploy
+{
     /**
      * @var \Fadion\Maneuver\Git
      */
@@ -24,6 +24,11 @@ class Deploy {
      * @var string Server credentials
      */
     protected $server;
+
+    /**
+     * @var false|boolean Indicate if is to add the forced files/folders list to upload list
+     */
+    protected $withForcedFiles = false;
 
     /**
      * @var string Revision filename
@@ -62,12 +67,13 @@ class Deploy {
      * @param \Banago\Bridge\Bridge $bridge
      * @param array $server
      */
-    public function __construct(Git $git, Bridge $bridge, $server)
+    public function __construct(Git $git, Bridge $bridge, $server, $withForcedFiles = false)
     {
         $this->git = $git;
         $this->bridge = $bridge;
         $this->ignoredFiles = $git->getIgnored();
         $this->server = $server;
+        $this->withForcedFiles = $withForcedFiles;
     }
 
     /**
@@ -105,24 +111,26 @@ class Deploy {
                 // Added, changed or modified.
                 if ($line[0] == 'A' or $line[0] == 'C' or $line[0] == 'M') {
                     $filesToUpload[] = trim(substr($line, 1));
-                }
-                // Deleted.
+                } // Deleted.
                 elseif ($line[0] == 'D') {
                     $filesToDelete[] = trim(substr($line, 1));
-                }
-                // Unknown status.
+                } // Unknown status.
                 else {
                     throw new Exception("Unknown git-diff status: {$line[0]}");
                 }
             }
-        }
-        // No remote version. Get all files.
+        } // No remote version. Get all files.
         else {
             $filesToUpload = $this->git->files();
         }
 
         // Remove ignored files from the list of uploads.
         $filesToUpload = array_diff($filesToUpload, $this->ignoredFiles);
+
+        if ($this->withForcedFiles) {
+            // Integrated forced files/folders to upload
+            $filesToUpload = $this->addForcedFiles($filesToUpload);
+        }
 
         $this->filesToUpload = $filesToUpload;
         $this->filesToDelete = $filesToDelete;
@@ -190,7 +198,7 @@ class Deploy {
     public function upload($file)
     {
         if ($this->isSubmodule) {
-            $file = $this->isSubmodule.'/'.$file;
+            $file = $this->isSubmodule . '/' . $file;
         }
 
         $dir = explode('/', dirname($file));
@@ -202,18 +210,17 @@ class Deploy {
         if ($dir[0] != '.' and $dir[0] != '..') {
             // Iterate through directory pieces.
             for ($i = 0, $count = count($dir); $i < $count; $i++) {
-                $path .= $dir[$i].'/';
+                $path .= $dir[$i] . '/';
 
                 if (!isset($pathThatExists[$path])) {
                     $origin = $this->bridge->pwd();
 
                     // The directory doesn't exist.
-                    if (! $this->bridge->exists($path)) {
+                    if (!$this->bridge->exists($path)) {
                         // Attempt to create the directory.
                         $this->bridge->mkdir($path);
                         $output[] = "Created directoy '$path'.'";
-                    }
-                    // The directory exists.
+                    } // The directory exists.
                     else {
                         $this->bridge->cd($path);
                     }
@@ -279,10 +286,36 @@ class Deploy {
 
         try {
             $this->bridge->put($localRevision, $this->revisionFile);
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             throw new Exception("Could not update the revision file on server: {$e->getMessage()}");
         }
     }
 
+    /**
+     * @param array $source
+     * @return array
+     */
+    public function addForcedFiles(array $source)
+    {
+        // Load the forced files/folders array from config.
+        $list = config('maneuver.forced');
+
+        if (!empty($list) && is_array($list)) {
+            // If 'composer.json' is in list but 'vendor' or 'vendor/' isn't, put vendor in list.
+            if (in_array('composer.json', $list)
+                && !in_array('vendor', $list)
+                && !in_array('vendor/', $list)) {
+                $list[] = 'vendor';
+            }
+
+            foreach ($list as $forced) {
+                foreach (\File::allFiles(base_path() . '/' . $forced) as $file) {
+                    $path = str_replace(base_path() . '/', '', $file->getPathname());
+                    array_push($source, $path);
+                }
+            }
+        }
+
+        return $source;
+    }
 }

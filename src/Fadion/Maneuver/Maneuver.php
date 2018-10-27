@@ -19,6 +19,11 @@ class Maneuver {
     protected $optRepo = null;
 
     /**
+     * @var false|boolean $optWithForcedFiles
+     */
+    protected $optWithForcedFiles = false;
+
+    /**
      * @var null|string $optRollback
      */
     protected $optRollback = null;
@@ -62,11 +67,12 @@ class Maneuver {
     {
         // Merge options with a set of null defaults,
         // so parameters can be omitted safely.
-        $defaults = array('server' => null, 'repo' => null, 'rollback' => null, 'sync' => null);
+        $defaults = array('server' => null, 'repo' => null, 'rollback' => null, 'sync' => null, 'withForcedFiles' => false);
         $options = array_merge($defaults, $options);
 
         $this->optServer = $options['server'];
         $this->optRepo = $options['repo'];
+        $this->optWithForcedFiles = $options['withForcedFiles'];
         $this->optRollback = $options['rollback'];
         $this->optSyncCommit = $options['sync'];
     }
@@ -116,7 +122,7 @@ class Maneuver {
                 continue;
             }
 
-            $deploy = new Deploy($git, $bridge, $credentials);
+            $deploy = new Deploy($git, $bridge, $credentials, $this->optWithForcedFiles);
 
             print "\r\n+ --------------- § --------------- +";
             print "\n» Server: $name";

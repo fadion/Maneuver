@@ -6,7 +6,8 @@ use Symfony\Component\Console\Input\InputArgument;
 use Fadion\Maneuver\Maneuver;
 use Exception;
 
-class DeployCommand extends Command {
+class DeployCommand extends Command
+{
 
     /**
      * The console command name.
@@ -40,16 +41,16 @@ class DeployCommand extends Command {
     public function handle()
     {
         try {
-            $options = array(
+            $options = [
                 'server' => $this->option('server'),
-                'repo' => $this->option('repo')
-            );
+                'repo' => $this->option('repo'),
+                'withForcedFiles' => $this->option('with-forced-files'),
+            ];
 
             $maneuver = new Maneuver($options);
             $maneuver->mode(Maneuver::MODE_DEPLOY);
             $maneuver->start();
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             $this->error($e->getMessage());
         }
     }
@@ -61,7 +62,7 @@ class DeployCommand extends Command {
      */
     protected function getArguments()
     {
-        return array();
+        return [];
     }
 
     /**
@@ -71,10 +72,11 @@ class DeployCommand extends Command {
      */
     protected function getOptions()
     {
-        return array(
-            array('server', 's', InputOption::VALUE_IS_ARRAY | InputOption::VALUE_OPTIONAL, 'Server to deploy to.', null),
-            array('repo', 'r', InputOption::VALUE_OPTIONAL, 'Repository to use.', null),
-        );
+        return [
+            ['server', 's', InputOption::VALUE_IS_ARRAY | InputOption::VALUE_OPTIONAL, 'Server to deploy to.', null],
+            ['repo', 'r', InputOption::VALUE_OPTIONAL, 'Repository to use.', null],
+            ['with-forced-files', 'wff', InputOption::VALUE_OPTIONAL, 'Add forced files/folders list to upload list.', null],
+        ];
     }
 
 }

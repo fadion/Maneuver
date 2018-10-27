@@ -15,6 +15,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Forced Files and Folders
+    |--------------------------------------------------------------------------
+    |
+    | If you need to upload files/folders in rare moments, like to update a
+    | vendor folder, configure this array with te files/folders list.
+    | Use --with-forced-files to include this files/folders to the list of files
+    | and folders to upload.
+    |
+    | To add full vendor using one of this options:
+    | 'composer.json'
+    | 'vendor'
+    | 'vendor/'
+    |
+    */
+    'forced' => [],
+
+    /*
+    |--------------------------------------------------------------------------
     | Default server
     |--------------------------------------------------------------------------
     |
