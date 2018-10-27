@@ -75,7 +75,7 @@ class DeployCommand extends Command
         return [
             ['server', 's', InputOption::VALUE_IS_ARRAY | InputOption::VALUE_OPTIONAL, 'Server to deploy to.', null],
             ['repo', 'r', InputOption::VALUE_OPTIONAL, 'Repository to use.', null],
-            ['with-forced-files', 'wff', InputOption::VALUE_OPTIONAL, 'Add forced files/folders list to upload list.', null],
+            ['with-forced-files', 'f', InputOption::VALUE_OPTIONAL, 'Add forced files/folders list to upload list.', null],
         ];
     }
 
