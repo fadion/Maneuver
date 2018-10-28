@@ -9,8 +9,8 @@ use Exception;
  * Handles the reading of git repos, submodules
  * and other git commands.
  */
-class Git {
-
+class Git
+{
     /**
      * @var string Git revision
      */
@@ -24,12 +24,12 @@ class Git {
     /**
      * @var array List of submodules and subsubmodules
      */
-    protected $submodules = array();
+    protected $submodules = [];
 
     /**
      * @var array List of ignore files, read from config
      */
-    protected $ignoredFiles = array();
+    protected $ignoredFiles = [];
 
     /**
      * Constructor
@@ -81,7 +81,7 @@ class Git {
             $repoPath = $this->repo;
         }
 
-        $command = 'git --git-dir="'.$repoPath.'/.git" --work-tree="'.$repoPath.'" '.$command;
+        $command = 'git --git-dir="' . $repoPath . '/.git" --work-tree="' . $repoPath . '" ' . $command;
 
         exec(escapeshellcmd($command), $output, $returnStatus);
 
@@ -107,7 +107,7 @@ class Git {
                 $this->submodules[] = array(
                     'revision' => $line[0],
                     'name' => $line[1],
-                    'path' => $repo.'/'.$line[1]
+                    'path' => $repo . '/' . $line[1]
                 );
                 $this->ignoredFiles[] = $line[1];
                 $this->checkSubSubmodules($repo, $line[1]);
@@ -120,6 +120,7 @@ class Git {
      *
      * @param string $repo
      * @param string $name
+     * @throws Exception
      */
     protected function checkSubSubmodules($repo, $name)
     {
@@ -133,10 +134,10 @@ class Git {
 
                 $this->submodules[] = array(
                     'revision' => $line[0],
-                    'name' => $name.'/'.$line[1],
-                    'path' => $repo.'/'.$name.'/'.$line[1]
+                    'name' => $name . '/' . $line[1],
+                    'path' => $repo . '/' . $name . '/' . $line[1]
                 );
-                $this->ignoredFiles[] = $name.'/'.$line[1];
+                $this->ignoredFiles[] = $name . '/' . $line[1];
             }
         }
     }
@@ -146,13 +147,14 @@ class Git {
      *
      * @param $revision
      * @return mixed
+     * @throws Exception
      */
     public function diff($revision)
     {
-        if (! $revision) {
+        if (!$revision) {
             return $this->command('ls-files');
         }
-        
+
         return $this->command("diff --name-status --no-renames {$revision}... {$this->revision}");
     }
 
@@ -160,6 +162,7 @@ class Git {
      * Gets files from work tree
      *
      * @return mixed
+     * @throws Exception
      */
     public function files()
     {
@@ -169,7 +172,8 @@ class Git {
     /**
      * Gets the current revision hash
      *
-     * @return string
+     * @return array
+     * @throws Exception
      */
     public function localRevision()
     {
@@ -179,7 +183,8 @@ class Git {
     /**
      * Rolls back revision
      *
-     * @return string
+     * @return array
+     * @throws Exception
      */
     public function rollback()
     {
@@ -189,7 +194,8 @@ class Git {
     /**
      * Reverts to master
      *
-     * @return string
+     * @return array
+     * @throws Exception
      */
     public function revertToMaster()
     {

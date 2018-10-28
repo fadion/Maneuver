@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
 
     /*
     |--------------------------------------------------------------------------
@@ -11,7 +11,25 @@ return array(
     | add here additional files to be ignored.
     |
     */
-    'ignored' => array(),
+    'ignored' => [],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Forced Files and Folders
+    |--------------------------------------------------------------------------
+    |
+    | If you need to upload files/folders in rare moments, like to update a
+    | vendor folder, configure this array with te files/folders list.
+    | Use --with-forced-files to include this files/folders to the list of files
+    | and folders to upload.
+    |
+    | To add full vendor using one of this options:
+    | 'composer.json'
+    | 'vendor'
+    | 'vendor/'
+    |
+    */
+    'forced' => [],
 
     /*
     |--------------------------------------------------------------------------
@@ -30,13 +48,13 @@ return array(
     |--------------------------------------------------------------------------
     |
     | Servers available for deployment. Specify one or more connections, such
-    | as: 'deployment', 'production', 'stating'; each with its own credentials.
+    | as: 'deployment', 'production', 'staging'; each with its own credentials.
     |
     */
 
-    'connections' => array(
+    'connections' => [
 
-        'development' => array(
+        'development' => [
             'scheme'    => 'ftp',
             'host'      => 'yourdevserver.com',
             'user'      => 'user',
@@ -44,9 +62,9 @@ return array(
             'path'      => '/path/to/server/',
             'port'      => 21,
             'passive'   => true
-        ),
+        ],
 
-        'production' => array(
+        'production' => [
             'scheme'    => 'ftp',
             'host'      => 'yourserver.com',
             'user'      => 'user',
@@ -54,8 +72,8 @@ return array(
             'path'      => '/path/to/server/',
             'port'      => 21,
             'passive'   => true
-        ),
+        ],
 
-    ),
+    ],
 
-);
+];
