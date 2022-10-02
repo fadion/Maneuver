@@ -16,10 +16,10 @@
         }
     ],
     "require": {
-        "php": ">=5.5.0",
-        "illuminate/support": "5.*",
-        "illuminate/console": "5.*",
-        "illuminate/config": "5.*",
+        "php": ">=5.5.0|>=7.0",
+        "illuminate/support": "5.*|^6.0",
+        "illuminate/console": "5.*|^6.0",
+        "illuminate/config": "5.*|6.0",
         "banago/bridge": "~1.0.8",
         "jakeasmith/http_build_url": "~0.1.2"
     },
@@ -28,5 +28,10 @@
             "Fadion\\Maneuver": "src/"
         }
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "config": {
+        "allow-plugins": {
+            "kylekatarnls/update-helper": true
+        }
+    }
 }
